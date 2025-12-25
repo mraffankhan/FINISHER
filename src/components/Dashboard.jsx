@@ -12,7 +12,6 @@ const Dashboard = ({ isOwner }) => {
         dropped: 0,
         avgTime: '0d',
         completionRate: 0,
-        // streak: 0 // Optional
     });
     const [activityData, setActivityData] = useState([]);
     const [difficultyData, setDifficultyData] = useState([]);
@@ -30,16 +29,11 @@ const Dashboard = ({ isOwner }) => {
             if (projectsError) console.error('Error fetching projects:', projectsError);
 
             if (projects) {
-                // FORCE RE-CALCULATION based on fresh payload
                 const total = projects.length;
-
-                // Status Counts - Exact String Matches
                 const completed = projects.filter(p => p.status === 'Completed').length;
                 const active = projects.filter(p => p.status === 'In Progress').length;
                 const dropped = projects.filter(p => p.status === 'Dropped').length;
-                // 'Not Started' is implicit remainder or we can count it
                 const notStarted = projects.filter(p => p.status === 'Not Started').length;
-
                 const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
                 const completedProjects = projects.filter(p => p.status === 'Completed' && p.actual_days);
@@ -50,13 +44,12 @@ const Dashboard = ({ isOwner }) => {
                 setStats({
                     total,
                     completed,
-                    active, // "Active Build" usually implies In Progress
+                    active,
                     dropped,
                     avgTime: `${avgDays}d`,
                     completionRate,
                 });
 
-                // Difficulty Split
                 const easy = projects.filter(p => p.difficulty === 'Easy').length;
                 const medium = projects.filter(p => p.difficulty === 'Medium').length;
                 const hard = projects.filter(p => p.difficulty === 'Hard').length;
@@ -67,7 +60,6 @@ const Dashboard = ({ isOwner }) => {
                     { name: 'Hard', value: hard, color: '#dc2626' },
                 ]);
 
-                // Activity (Shipping Cadence)
                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 const activityBuckets = months.map(m => ({ name: m, projects: 0 }));
 
@@ -79,14 +71,14 @@ const Dashboard = ({ isOwner }) => {
                     }
                 });
 
-                setActivityData(activityBuckets); // Show full year Jan-Dec
+                setActivityData(activityBuckets);
             }
 
             setLoading(false);
         };
 
         fetchDashboardData();
-    }, []); // Runs on mount. If user navigates away and back, it runs again, refreshing data.
+    }, []);
 
     if (loading) {
         return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>;
@@ -95,7 +87,8 @@ const Dashboard = ({ isOwner }) => {
     return (
         <div>
             {/* Header: Clean & Welcoming */}
-            <div style={{ marginBottom: '3rem' }}>
+            <div className="desktop-header" style={{ marginBottom: '3rem' }}>
+                <div className="mobile-header-spacer" />
                 <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
                     Dashboard
                 </h1>
@@ -104,15 +97,15 @@ const Dashboard = ({ isOwner }) => {
                 </p>
             </div>
 
-            {/* Top Stats Grid - 4 Columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+            {/* Top Stats Grid - Responsive Class */}
+            <div className="grid-responsive-4" style={{ marginBottom: '2rem' }}>
                 <StatsCard title="Completed Projects" value={stats.completed} icon={CheckCheck} />
                 <StatsCard title="Active Builds" value={stats.active} icon={Zap} subtext="In Progress" />
                 <StatsCard title="Ship Rate" value={`${stats.completionRate}%`} icon={TrendingUp} subtext="Completion %" />
                 <StatsCard title="Avg Time To Ship" value={stats.avgTime} icon={Clock} />
             </div>
 
-            {/* Charts Section - Simple & Readable */}
+            {/* Charts Section - Responsive Class handled inside Charts.jsx or container */}
             <Charts activityData={activityData} difficultyData={difficultyData} />
 
         </div>

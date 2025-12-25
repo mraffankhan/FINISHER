@@ -23,7 +23,7 @@ const Charts = ({ activityData, difficultyData }) => {
     };
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+        <div className="charts-grid">
 
             {/* Activity Chart */}
             <div className="card">

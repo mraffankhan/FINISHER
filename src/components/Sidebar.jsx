@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import {
-    LayoutGrid, // Replaces LayoutDashboard for cleaner look
-    Folder, // Clean folder icon
-    CheckCheck, // Replaces CheckSquare
-    PieChart, // Replaces BarChart2
+    LayoutGrid,
+    Folder,
+    CheckCheck,
+    PieChart,
     Settings,
-    Layers
+    Layers,
+    X // For closing on mobile
 } from 'lucide-react';
 
-const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
+const Sidebar = ({ activeTab, onNavigate, onLogoClick, isOpen, onClose }) => {
     const [clickCount, setClickCount] = useState(0);
 
     const handleLogoClick = () => {
@@ -28,7 +29,6 @@ const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
         return () => clearTimeout(timer);
     }, [clickCount, onLogoClick]);
 
-    // Using slightly more abstract icons for premium feel
     const menuItems = [
         { icon: LayoutGrid, label: 'Dashboard', id: 'dashboard' },
         { icon: Folder, label: 'Projects', id: 'projects' },
@@ -37,45 +37,43 @@ const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
     ];
 
     return (
-        <aside style={{
-            width: '80px', // Slim sidebar by default (or user requested slim? "Slim, elegant, icon-first". Does that mean collapsed or just narrow? Let's go with narrow but labelled or just icons? "Icon-first". Let's stick to a clean vertical expanding sidebar or a fixed comfortable width. Prompt said "Sidebar: Slim, elegant". Let's try a compact 260px but with more padding.)
-            // wait, "Slim, elegant, icon-first" might imply icon-only or very clean list. Let's stick to 240px-260px for readability but make it 'airy'.
-            // actually, user said "Slim... icon-first". I will make it the standard sidebar width but with a cleaner icon-led design.
-            width: '260px',
-            height: '100vh',
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            backgroundColor: 'var(--bg-sidebar)', // White
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 50,
-            // Removed border-right to depend on shadow or subtle BG difference. 
-            // Prompt: "Minimal color palette... Background: #EAEBED". Sidebar is White?
-            // "Sidebar: Slim, elegant".
-            // Let's us a very subtle border.
-            borderRight: '1px solid rgba(0,0,0,0.03)',
-        }}>
-            {/* Brand */}
-            <div
-                onClick={handleLogoClick}
-                style={{
-                    height: '80px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    paddingLeft: '2rem',
-                    marginBottom: '1rem',
-                    cursor: 'default',
-                    userSelect: 'none'
-                }}
-            >
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    color: 'var(--primary-600)'
-                }}>
-                    {/* Minimal Logo */}
+        <aside
+            className={`sidebar-responsive ${isOpen ? 'open' : ''}`}
+            style={{
+                width: '260px',
+                height: '100vh',
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                backgroundColor: 'var(--bg-sidebar)',
+                display: 'flex',
+                flexDirection: 'column',
+                zIndex: 50,
+                borderRight: '1px solid rgba(0,0,0,0.03)',
+                // Transition handled by class
+            }}
+        >
+            {/* Brand - Desktop Header / Mobile Drawer Header */}
+            <div style={{
+                height: '80px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingLeft: '2rem',
+                paddingRight: '1.5rem',
+                marginBottom: '1rem',
+            }}>
+                <div
+                    onClick={handleLogoClick}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        color: 'var(--primary-600)',
+                        cursor: 'default',
+                        userSelect: 'none'
+                    }}
+                >
                     <Layers size={24} strokeWidth={2.5} />
                     <span style={{
                         fontFamily: 'Inter, sans-serif',
@@ -87,11 +85,37 @@ const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
                         BUILTLY
                     </span>
                 </div>
+
+                {/* Mobile Close Button */}
+                <button
+                    onClick={onClose}
+                    className="mobile-close-btn" // define in css if needed or inline media query logic 
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--gray-500)',
+                        cursor: 'pointer',
+                        display: 'none' // Hidden by default (desktop)
+                        // logic to show this is complex inline without media query, 
+                        // but since sidebar is transformed out on mobile, we can just leave it visible flex-wise
+                        // and the whole sidebar hides. Wait, on desktop we don't want X.
+                    }}
+                >
+                    <X size={20} />
+                </button>
             </div>
+
+            {/* Style hack for mobile close button visibility */}
+            <style>{`
+                @media (max-width: 768px) {
+                    .mobile-close-btn { display: block !important; }
+                }
+             `}</style>
+
 
             {/* Navigation */}
             <nav style={{ flex: 1, padding: '0 1rem' }}>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', listStyle: 'none' }}>
                     {menuItems.map((item) => {
                         const isActive = activeTab === item.id;
                         const Icon = item.icon;
@@ -108,7 +132,6 @@ const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
                                         padding: '0.75rem 1rem',
                                         borderRadius: '8px',
                                         border: 'none',
-                                        // Active state: Minimal branding
                                         backgroundColor: isActive ? 'var(--primary-50)' : 'transparent',
                                         color: isActive ? 'var(--primary-700)' : 'var(--gray-500)',
                                         fontWeight: isActive ? 600 : 500,

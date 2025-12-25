@@ -24,21 +24,35 @@ const Projects = ({ isOwner }) => {
 
     const fetchProjects = async () => {
         setLoading(true);
-        // FETCH ALL PROJECTS (Public Read)
-        const { data, error } = await supabase
-            .from('projects')
-            .select('*'); // We will sort in JS to handle dynamic sort
+        // FETCH ALL PROJECTS & TASKS
+        const { data: projectsData, error: projError } = await supabase.from('projects').select('*');
+        const { data: tasksData, error: taskError } = await supabase.from('tasks').select('id, project_id, status');
 
-        if (error) console.error('Error fetching projects:', error);
+        if (projError) console.error('Error fetching projects:', projError);
 
-        if (data) {
-            const enhancedData = data.map(p => ({
-                ...p,
-                progress: p.status === 'Completed' ? 100 : (p.status === 'Not Started' ? 0 : 50),
-                // Ensure dates are parsed correctly for sorting
-                parsedDate: new Date(p.created_at),
-                parsedDueDate: p.due_date ? new Date(p.due_date) : null
-            }));
+        if (projectsData) {
+            const enhancedData = projectsData.map(p => {
+                // Calculate Real Progress
+                const pTasks = tasksData ? tasksData.filter(t => t.project_id === p.id) : [];
+                const totalTasks = pTasks.length;
+                const completedTasks = pTasks.filter(t => t.status === 'Completed').length;
+
+                // If tasks exist, use real %, else fallback to status proxy
+                let progress;
+                if (totalTasks > 0) {
+                    progress = Math.round((completedTasks / totalTasks) * 100);
+                } else {
+                    progress = p.status === 'Completed' ? 100 : (p.status === 'Not Started' ? 0 : 50);
+                }
+
+                return {
+                    ...p,
+                    taskProgress: progress,
+                    // Ensure dates are parsed correctly for sorting
+                    parsedDate: new Date(p.created_at),
+                    parsedDueDate: p.due_date ? new Date(p.due_date) : null
+                };
+            });
             setAllProjects(enhancedData);
         }
         setLoading(false);
@@ -136,7 +150,7 @@ const Projects = ({ isOwner }) => {
     return (
         <div>
             {/* Header */}
-            <header style={{
+            <header className="desktop-header" style={{
                 height: '80px',
                 display: 'flex',
                 alignItems: 'center',
@@ -170,14 +184,12 @@ const Projects = ({ isOwner }) => {
                 )}
             </header>
 
+            <div className="mobile-header-spacer" />
+
             <ProjectFilters filters={filters} onFilterChange={handleFilterChange} />
 
             {/* Projects Grid */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '2rem'
-            }}>
+            <div className="grid-responsive-3" style={{ paddingBottom: '80px' }}> {/* Padding for FAB */}
                 {loading ? (
                     <div style={{ color: 'var(--text-secondary)' }}>Loading projects...</div>
                 ) : filteredProjects.length === 0 ? (
@@ -194,6 +206,13 @@ const Projects = ({ isOwner }) => {
                     ))
                 )}
             </div>
+
+            {/* Mobile Floating Action Button */}
+            {isOwner && (
+                <button className="mobile-fab" onClick={handleCreateClick}>
+                    <Plus size={24} />
+                </button>
+            )}
 
             {/* Universal Modal */}
             <CreateProjectModal

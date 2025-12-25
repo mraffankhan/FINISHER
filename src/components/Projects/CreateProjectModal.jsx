@@ -10,6 +10,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectSaved, projectToEdit = n
     const [startDate, setStartDate] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [expectedDays, setExpectedDays] = useState('');
+    const [actualDays, setActualDays] = useState(''); // New for analytics
     const [loading, setLoading] = useState(false);
 
     // Effect to populate form when editing
@@ -22,6 +23,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectSaved, projectToEdit = n
             setStartDate(projectToEdit.start_date || '');
             setDueDate(projectToEdit.due_date || '');
             setExpectedDays(projectToEdit.expected_days || '');
+            setActualDays(projectToEdit.actual_days || '');
         } else {
             // Reset for create mode
             setName('');
@@ -31,6 +33,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectSaved, projectToEdit = n
             setStartDate('');
             setDueDate('');
             setExpectedDays('');
+            setActualDays('');
         }
     }, [projectToEdit, isOpen]);
 
@@ -48,6 +51,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectSaved, projectToEdit = n
             start_date: startDate || null,
             due_date: dueDate || null,
             expected_days: expectedDays || null,
+            actual_days: actualDays || null,
         };
 
         let result;
@@ -84,10 +88,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectSaved, projectToEdit = n
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100
         }} onClick={onClose}>
-            <div style={{
-                backgroundColor: 'white', padding: '2rem', borderRadius: '16px', width: '500px',
-                boxShadow: 'var(--shadow-lg)'
-            }} onClick={e => e.stopPropagation()}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                         {projectToEdit ? 'Edit Project' : 'Create New Project'}
@@ -192,6 +193,20 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectSaved, projectToEdit = n
                             placeholder="7"
                         />
                     </div>
+
+                    {/* Actual Days (Only if Completed) */}
+                    {status === 'Completed' && (
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Actual Days</label>
+                            <input
+                                type="number"
+                                value={actualDays}
+                                onChange={e => setActualDays(e.target.value)}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-light)' }}
+                                placeholder="5"
+                            />
+                        </div>
+                    )}
 
                     <button
                         type="submit"

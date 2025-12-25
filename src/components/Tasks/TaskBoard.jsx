@@ -10,17 +10,11 @@ const columns = [
 
 const TaskBoard = ({ tasks = [], isOwner, onComplete, onEdit, onDelete }) => {
     return (
-        <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '2rem', // Generous spacing between columns
-            alignItems: 'start',
-            paddingBottom: '2rem'
-        }}>
+        <div className="task-board-container">
             {columns.map(col => {
                 const colTasks = tasks.filter(t => t.status === col.id);
                 return (
-                    <div key={col.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div key={col.id} style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: '250px' }}>
                         {/* Minimal Column Header */}
                         <div style={{
                             display: 'flex',

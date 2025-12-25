@@ -28,6 +28,7 @@ function App() {
                 activeTab={activeTab}
                 onNavigate={setActiveTab}
                 onLogoClick={() => setModalOpen(true)}
+                isOwner={isOwner}
             >
                 {activeTab === 'dashboard' && <Dashboard isOwner={isOwner} />}
                 {activeTab === 'projects' && <Projects isOwner={isOwner} />}
