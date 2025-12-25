@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import StatsCard from './StatsCard';
 import Charts from './Charts';
-import { Layers, CheckCircle2, Calendar, TrendingUp, AlertOctagon, Activity, Clock } from 'lucide-react';
+import { Layers, CheckCheck, TrendingUp, Zap, Clock, Calendar } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 const Dashboard = ({ isOwner }) => {
@@ -57,9 +57,9 @@ const Dashboard = ({ isOwner }) => {
                 const hard = projects.filter(p => p.difficulty === 'Hard').length;
 
                 setDifficultyData([
-                    { name: 'Easy', value: easy, color: '#10b981' },
+                    { name: 'Easy', value: easy, color: '#059669' },
                     { name: 'Medium', value: medium, color: '#006989' },
-                    { name: 'Hard', value: hard, color: '#ef4444' },
+                    { name: 'Hard', value: hard, color: '#dc2626' },
                 ]);
 
                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -84,51 +84,30 @@ const Dashboard = ({ isOwner }) => {
     }, []);
 
     if (loading) {
-        return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading dashboard...</div>;
+        return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>;
     }
 
     return (
-        <div style={{ paddingTop: '1rem', paddingBottom: '4rem' }}>
-
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Dashboard</h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
-                        {isOwner ? 'Welcome back, Owner.' : 'Public View - Read Only'}
-                    </p>
-                </div>
-                <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--primary-100)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--primary-600)',
-                    fontWeight: 700
-                }}>
-                    {isOwner ? 'A' : 'G'}
-                </div>
+        <div>
+            {/* Header: Clean & Welcoming */}
+            <div style={{ marginBottom: '3rem' }}>
+                <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                    Dashboard
+                </h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>
+                    {isOwner ? 'Execution mode.' : 'Building in public.'}
+                </p>
             </div>
 
-            {/* Top Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem', marginBottom: '2.5rem' }}>
-                <StatsCard title="Total Projects" value={stats.total} icon={Layers} />
-                <StatsCard title="Completed" value={stats.completed} icon={CheckCircle2} />
-                <StatsCard title="Active Builds" value={stats.active} icon={Activity} />
-                <StatsCard title="Dropped" value={stats.dropped} subtext="Learning experiences" icon={AlertOctagon} />
+            {/* Top Stats Grid - 4 Columns */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+                <StatsCard title="Completed Projects" value={stats.completed} icon={CheckCheck} />
+                <StatsCard title="Active Build" value={stats.active} icon={Zap} />
+                <StatsCard title="Ship Rate" value={`${stats.completionRate}%`} icon={TrendingUp} subtext="Keep shipping." />
+                <StatsCard title="Avg Time To Ship" value={stats.avgTime} icon={Clock} />
             </div>
 
-            {/* Secondary Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', marginBottom: '2.5rem' }}>
-                <StatsCard title="Avg Build Time" value={stats.avgTime} icon={Clock} />
-                <StatsCard title="Completion Rate" value={`${stats.completionRate}%`} trend={0} icon={TrendingUp} />
-                <StatsCard title="Work Streak" value={`${stats.streak} Days`} subtext={isOwner ? "Keep pushing!" : "Consistency"} icon={Calendar} />
-            </div>
-
-            {/* Charts Section */}
+            {/* Charts Section - Simple & Readable */}
             <Charts activityData={activityData} difficultyData={difficultyData} />
 
         </div>

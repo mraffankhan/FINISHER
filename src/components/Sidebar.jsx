@@ -1,85 +1,97 @@
 import React, { useState } from 'react';
 import {
-    LayoutDashboard,
-    FolderKanban,
-    CheckSquare,
-    BarChart2,
-    LogOut,
-    Layers,
-    Settings
+    LayoutGrid, // Replaces LayoutDashboard for cleaner look
+    Folder, // Clean folder icon
+    CheckCheck, // Replaces CheckSquare
+    PieChart, // Replaces BarChart2
+    Settings,
+    Layers
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
     const [clickCount, setClickCount] = useState(0);
 
     const handleLogoClick = () => {
-        setClickCount(prev => {
-            const newCount = prev + 1;
-            if (newCount === 3) {
-                // Trigger modal and reset
-                if (onLogoClick) onLogoClick();
-                return 0;
-            }
-            // Reset after 1 second if not reached 3
-            setTimeout(() => setClickCount(0), 1000);
-            return newCount;
-        });
+        setClickCount(prev => prev + 1);
     };
 
+    React.useEffect(() => {
+        if (clickCount === 3) {
+            if (onLogoClick) onLogoClick();
+            setClickCount(0);
+        }
+
+        let timer;
+        if (clickCount > 0) {
+            timer = setTimeout(() => setClickCount(0), 1000);
+        }
+        return () => clearTimeout(timer);
+    }, [clickCount, onLogoClick]);
+
+    // Using slightly more abstract icons for premium feel
     const menuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
-        { icon: FolderKanban, label: 'Projects', id: 'projects' },
-        { icon: CheckSquare, label: 'Tasks', id: 'tasks' },
-        { icon: BarChart2, label: 'Analytics', id: 'analytics' },
+        { icon: LayoutGrid, label: 'Dashboard', id: 'dashboard' },
+        { icon: Folder, label: 'Projects', id: 'projects' },
+        { icon: CheckCheck, label: 'Tasks', id: 'tasks' },
+        { icon: PieChart, label: 'Analytics', id: 'analytics' },
     ];
 
     return (
         <aside style={{
-            width: '280px',
+            width: '80px', // Slim sidebar by default (or user requested slim? "Slim, elegant, icon-first". Does that mean collapsed or just narrow? Let's go with narrow but labelled or just icons? "Icon-first". Let's stick to a clean vertical expanding sidebar or a fixed comfortable width. Prompt said "Sidebar: Slim, elegant". Let's try a compact 260px but with more padding.)
+            // wait, "Slim, elegant, icon-first" might imply icon-only or very clean list. Let's stick to 240px-260px for readability but make it 'airy'.
+            // actually, user said "Slim... icon-first". I will make it the standard sidebar width but with a cleaner icon-led design.
+            width: '260px',
             height: '100vh',
             position: 'fixed',
             left: 0,
             top: 0,
-            borderRight: '1px solid var(--border-light)',
-            backgroundColor: 'var(--bg-sidebar)',
+            backgroundColor: 'var(--bg-sidebar)', // White
             display: 'flex',
             flexDirection: 'column',
-            zIndex: 10,
-            paddingTop: '1rem'
+            zIndex: 50,
+            // Removed border-right to depend on shadow or subtle BG difference. 
+            // Prompt: "Minimal color palette... Background: #EAEBED". Sidebar is White?
+            // "Sidebar: Slim, elegant".
+            // Let's us a very subtle border.
+            borderRight: '1px solid rgba(0,0,0,0.03)',
         }}>
-            {/* App Logo with Hidden Click Trigger */}
+            {/* Brand */}
             <div
                 onClick={handleLogoClick}
                 style={{
-                    padding: '2rem 2.5rem',
+                    height: '80px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.875rem',
+                    paddingLeft: '2rem',
                     marginBottom: '1rem',
                     cursor: 'default',
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none'
+                    userSelect: 'none'
                 }}
             >
                 <div style={{
-                    width: '42px',
-                    height: '42px',
-                    background: 'linear-gradient(135deg, var(--primary-600), var(--primary-500))',
-                    borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    boxShadow: '0 4px 12px rgba(0, 105, 137, 0.3)'
+                    gap: '0.75rem',
+                    color: 'var(--primary-600)'
                 }}>
-                    <Layers size={22} strokeWidth={2.5} />
+                    {/* Minimal Logo */}
+                    <Layers size={24} strokeWidth={2.5} />
+                    <span style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '1.125rem',
+                        letterSpacing: '-0.02em',
+                        color: 'var(--gray-900)'
+                    }}>
+                        BUILTLY
+                    </span>
                 </div>
-                <span style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>BUILTLY</span>
             </div>
 
             {/* Navigation */}
             <nav style={{ flex: 1, padding: '0 1rem' }}>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     {menuItems.map((item) => {
                         const isActive = activeTab === item.id;
                         const Icon = item.icon;
@@ -92,30 +104,32 @@ const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
                                         width: '100%',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '0.875rem',
-                                        padding: '0.875rem 1.25rem',
-                                        borderRadius: 'var(--radius-md)',
-                                        border: isActive ? '1px solid var(--border-light)' : '1px solid transparent',
-                                        backgroundColor: isActive ? 'var(--bg-app)' : 'transparent',
-                                        color: isActive ? 'var(--primary-600)' : 'var(--text-secondary)',
+                                        gap: '1rem',
+                                        padding: '0.75rem 1rem',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        // Active state: Minimal branding
+                                        backgroundColor: isActive ? 'var(--primary-50)' : 'transparent',
+                                        color: isActive ? 'var(--primary-700)' : 'var(--gray-500)',
                                         fontWeight: isActive ? 600 : 500,
                                         transition: 'all 0.2s ease',
-                                        cursor: 'pointer'
+                                        cursor: 'pointer',
+                                        fontSize: '0.9375rem'
                                     }}
                                     onMouseEnter={(e) => {
                                         if (!isActive) {
-                                            e.currentTarget.style.backgroundColor = 'var(--bg-app)';
-                                            e.currentTarget.style.color = 'var(--text-primary)';
+                                            e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                                            e.currentTarget.style.color = 'var(--gray-700)';
                                         }
                                     }}
                                     onMouseLeave={(e) => {
                                         if (!isActive) {
                                             e.currentTarget.style.backgroundColor = 'transparent';
-                                            e.currentTarget.style.color = 'var(--text-secondary)';
+                                            e.currentTarget.style.color = 'var(--gray-500)';
                                         }
                                     }}
                                 >
-                                    <Icon size={20} style={{ opacity: isActive ? 1 : 0.7 }} />
+                                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} style={{ opacity: isActive ? 1 : 0.8 }} />
                                     {item.label}
                                 </button>
                             </li>
@@ -124,25 +138,27 @@ const Sidebar = ({ activeTab, onNavigate, onLogoClick }) => {
                 </ul>
             </nav>
 
-            {/* Footer / User Profile */}
-            <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border-light)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                    <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        backgroundColor: 'var(--bg-app)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Settings size={18} color="var(--text-muted)" />
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Preferences</p>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>v1.0.0 (Public)</p>
-                    </div>
-                </div>
+            {/* Footer */}
+            <div style={{ padding: '2rem' }}>
+                <button style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--gray-400)',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer',
+                    width: '100%',
+                    opacity: 0.8,
+                    transition: 'opacity 0.2s'
+                }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={e => e.currentTarget.style.opacity = 0.8}
+                >
+                    <Settings size={18} />
+                    <span>Settings</span>
+                </button>
             </div>
         </aside>
     );

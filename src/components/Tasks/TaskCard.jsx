@@ -1,116 +1,136 @@
 import React from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, MoreHorizontal } from 'lucide-react';
 
-const TaskCard = ({ task }) => {
-    const getDifficultyColor = (diff) => {
-        switch (diff) {
-            case 'Easy': return 'var(--success)';
-            case 'Medium': return 'var(--primary-500)';
-            case 'Hard': return 'var(--danger)';
-            default: return 'var(--text-secondary)';
-        }
-    };
+const TaskCard = ({ task, isOwner, onComplete }) => {
 
-    const getPriorityColor = (prio) => {
-        switch (prio) {
-            case 'Low': return 'var(--text-muted)';
-            case 'Medium': return 'var(--warning)';
-            case 'High': return 'var(--danger)';
-            default: return 'var(--text-muted)';
-        }
-    };
+    // Minimal Difficulty Indicator (Dot)
+    const getDiffColor = (d) => {
+        if (d === 'Hard') return 'var(--danger)';
+        if (d === 'Medium') return 'var(--warning)';
+        return 'var(--success)';
+    }
 
-    // Handling optional fields/joins
-    // If project is joined, it might be an object 'projects: { name: ... }'
-    const projectName = task.projects?.name || 'Unknown Project';
+    const projectName = task.projects?.name;
 
-    // Progress logic proxy (no progress field in schema, status based)
-    const progress = task.status === 'Completed' ? 100 : (task.status === 'Not Started' ? 0 : 50);
+    // Logic from previous step
+    const progress = task.status === 'Completed'
+        ? (task.completion_type === 'partial' ? 75 : 100)
+        : (task.status === 'Not Started' ? 0 : 50);
+
+    const isPartial = task.status === 'Completed' && task.completion_type === 'partial';
+    const isCompleted = task.status === 'Completed';
 
     return (
         <div style={{
             background: 'white',
             borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
+            padding: '1rem', // Tighter padding for "lightweight" feel
             boxShadow: 'var(--shadow-sm)',
             border: '1px solid var(--border-light)',
-            cursor: 'move',
-            marginBottom: '1rem',
-            transition: 'all 0.2s ease'
+            marginBottom: '0.75rem',
+            transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+            position: 'relative',
+            opacity: isCompleted && !isPartial ? 0.7 : 1, // Fade fully completed tasks slightly to focus on active ones
         }}
             onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-card)';
-                e.currentTarget.style.borderColor = 'var(--primary-100)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                e.currentTarget.style.borderColor = 'var(--gray-300)';
+                // Show complete button on hover if owner
+                const btn = e.currentTarget.querySelector('.complete-btn');
+                if (btn) btn.style.opacity = 1;
             }}
             onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                 e.currentTarget.style.borderColor = 'var(--border-light)';
+                const btn = e.currentTarget.querySelector('.complete-btn');
+                if (btn) btn.style.opacity = 0;
             }}
         >
-            {/* Tags Row */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            {/* Top Row: Project & Priority */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <span style={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.7rem',
                     fontWeight: 600,
-                    color: getDifficultyColor(task.difficulty),
-                    background: `color-mix(in srgb, ${getDifficultyColor(task.difficulty)} 10%, transparent)`,
-                    padding: '2px 8px',
-                    borderRadius: '4px'
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.03em',
+                    maxWidth: '120px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
                 }}>
-                    {task.difficulty}
+                    {projectName || 'No Project'}
                 </span>
-                <span style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: getPriorityColor(task.priority),
-                    background: `color-mix(in srgb, ${getPriorityColor(task.priority)} 10%, transparent)`,
-                    padding: '2px 8px',
-                    borderRadius: '4px'
+
+                {/* Difficulty Dot */}
+                <div title={`Difficulty: ${task.difficulty}`} style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: getDiffColor(task.difficulty) }} />
+            </div>
+
+            {/* Title */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <h4 style={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 500,
+                    color: isCompleted ? 'var(--text-secondary)' : 'var(--text-primary)',
+                    marginBottom: '0.75rem',
+                    lineHeight: 1.4,
+                    textDecoration: isCompleted && !isPartial ? 'line-through' : 'none'
                 }}>
-                    {task.priority || 'Normal'}
-                </span>
+                    {task.title}
+                </h4>
+
+                {/* Owner Hover Action */}
+                {isOwner && !isCompleted && (
+                    <button
+                        className="complete-btn"
+                        onClick={() => onComplete(task)}
+                        style={{
+                            opacity: 0,
+                            padding: '4px',
+                            background: 'transparent',
+                            border: '1px solid var(--gray-300)',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            color: 'var(--gray-500)',
+                            display: 'flex',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <div style={{ width: 12, height: 12, border: '1.5px solid currentColor', borderRadius: '50%' }} />
+                    </button>
+                )}
             </div>
 
-            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem', lineHeight: 1.4 }}>
-                {task.title}
-            </h4>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                {projectName}
-            </p>
-
-            {/* Footer info */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Calendar size={14} />
-                        <span>{task.due_date || 'No Date'}</span>
+            {/* Metadata Footer */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {task.due_date && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                        <Calendar size={12} strokeWidth={2} />
+                        <span>{new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Clock size={14} />
-                        <span>{task.estimated_hours ? `${task.estimated_hours}h` : '-'}</span>
+                )}
+
+                {(task.estimated_hours) && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                        <Clock size={12} strokeWidth={2} />
+                        <span>{task.estimated_hours}h</span>
                     </div>
-                </div>
-            </div>
+                )}
 
-            {/* Progress Bar (Visual Only - proxy) */}
-            <div style={{
-                height: '4px',
-                width: '100%',
-                backgroundColor: 'var(--bg-app)',
-                borderRadius: '2px',
-                marginTop: '1rem',
-                overflow: 'hidden'
-            }}>
-                <div style={{
-                    height: '100%',
-                    width: `${progress}%`,
-                    backgroundColor: 'var(--primary-500)',
-                    borderRadius: '2px'
-                }} />
+                {isPartial && (
+                    <span style={{
+                        marginLeft: 'auto',
+                        fontSize: '0.65rem',
+                        border: '1px solid var(--gray-300)',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        color: 'var(--text-secondary)',
+                        background: 'var(--gray-50)'
+                    }}>
+                        PARTIAL
+                    </span>
+                )}
             </div>
-
         </div>
     );
 };

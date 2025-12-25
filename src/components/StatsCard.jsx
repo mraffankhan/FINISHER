@@ -1,63 +1,60 @@
 import React from 'react';
 
-const StatsCard = ({ title, value, subtext, icon: Icon, trend }) => {
+const StatsCard = ({ title, value, icon: Icon, subtext, trend }) => {
     return (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.75rem',
+            border: '1px solid var(--border-light)',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            height: '100%',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            cursor: 'default'
+        }}
+            onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <span style={{
-                    color: 'var(--text-muted)',
-                    fontSize: '0.75rem',
+                    color: 'var(--text-secondary)',
+                    fontSize: '0.875rem',
                     fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
+                    letterSpacing: '0.02em'
                 }}>
                     {title}
                 </span>
-                {Icon && (
-                    <div style={{
-                        padding: '8px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--primary-50)',
-                        color: 'var(--primary-600)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Icon size={18} />
-                    </div>
-                )}
+                {Icon && <Icon size={20} color="var(--gray-400)" strokeWidth={1.5} />}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{
+            <div>
+                <div style={{
                     fontSize: '2.5rem',
                     fontWeight: 700,
                     color: 'var(--text-primary)',
-                    lineHeight: 1,
                     letterSpacing: '-0.03em',
-                    marginBottom: '0.25rem'
+                    lineHeight: 1
                 }}>
                     {value}
-                </span>
+                </div>
 
-                {(subtext || trend) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {trend && (
-                            <span style={{
-                                fontSize: '0.875rem',
-                                color: trend > 0 ? 'var(--success)' : 'var(--danger)',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center'
-                            }}>
-                                {trend > 0 ? '+' : ''}{trend}%
-                            </span>
-                        )}
-                        {subtext && (
-                            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                {subtext}
-                            </span>
-                        )}
+                {subtext && (
+                    <div style={{
+                        marginTop: '0.75rem',
+                        fontSize: '0.875rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: 500
+                    }}>
+                        {subtext}
                     </div>
                 )}
             </div>

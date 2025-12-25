@@ -1,42 +1,73 @@
 import React from 'react';
-import { Calendar, Clock, BarChart } from 'lucide-react';
+import { Calendar, ArrowUpRight } from 'lucide-react';
 
 const ProjectCard = ({ project }) => {
-    const getDifficultyColor = (diff) => {
-        switch (diff) {
-            case 'Easy': return 'var(--success)';
-            case 'Medium': return 'var(--primary-500)';
-            case 'Hard': return 'var(--danger)';
-            default: return 'var(--text-muted)';
+    // Map status/difficulty to aesthetic styles
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Completed': return { color: 'var(--success)', bg: 'var(--success-bg)' };
+            case 'In Progress': return { color: 'var(--primary-600)', bg: 'var(--primary-50)' };
+            case 'Not Started': return { color: 'var(--gray-500)', bg: 'var(--gray-100)' };
+            case 'Dropped': return { color: 'var(--gray-400)', bg: 'var(--gray-50)' };
+            default: return { color: 'var(--gray-500)', bg: 'var(--gray-100)' };
         }
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Completed': return 'var(--success)';
-            case 'In Progress': return 'var(--primary-500)';
-            case 'Dropped': return 'var(--text-muted)';
-            default: return 'var(--text-secondary)';
-        }
-    };
+    const s = getStatusStyle(project.status);
+
+    // Progress is based on status proxy as defined in Projects.jsx
+    const progress = project.status === 'Completed' ? 100 : (project.status === 'Not Started' ? 0 : 50);
 
     return (
-        <div className="card" style={{
+        <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-light)',
             padding: '1.5rem',
+            position: 'relative',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1rem',
-            cursor: 'pointer',
-            height: '100%',
-            justifyContent: 'space-between'
-        }}>
+            justifyContent: 'space-between',
+            height: '220px', // Fixed height for grid uniformity
+            boxShadow: 'var(--shadow-sm)'
+        }}
+            onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                e.currentTarget.style.borderColor = 'var(--gray-300)';
+                const icon = e.currentTarget.querySelector('.arrow-icon');
+                if (icon) icon.style.opacity = 1;
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                e.currentTarget.style.borderColor = 'var(--border-light)';
+                const icon = e.currentTarget.querySelector('.arrow-icon');
+                if (icon) icon.style.opacity = 0;
+            }}
+        >
+            {/* Hover Icon */}
+            <ArrowUpRight
+                className="arrow-icon"
+                size={20}
+                style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    right: '1.5rem',
+                    color: 'var(--gray-400)',
+                    opacity: 0,
+                    transition: 'opacity 0.2s'
+                }}
+            />
+
             <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                {/* Header (Category & Difficulty) */}
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
                     <span style={{
                         fontSize: '0.75rem',
                         fontWeight: 600,
+                        color: 'var(--gray-500)',
                         textTransform: 'uppercase',
-                        color: 'var(--text-secondary)',
                         letterSpacing: '0.05em'
                     }}>
                         {project.category}
@@ -44,70 +75,55 @@ const ProjectCard = ({ project }) => {
                     <span style={{
                         fontSize: '0.75rem',
                         fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: '99px',
-                        color: getDifficultyColor(project.difficulty),
-                        backgroundColor: `color-mix(in srgb, ${getDifficultyColor(project.difficulty)} 10%, transparent)`
+                        color: 'var(--gray-400)' // Muted difficulty
                     }}>
-                        {project.difficulty}
+                        • &nbsp; {project.difficulty}
                     </span>
                 </div>
 
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                {/* Title */}
+                <h3 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.2,
+                    marginBottom: '0.5rem'
+                }}>
                     {project.name}
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: getStatusColor(project.status), fontWeight: 500, marginBottom: '1rem' }}>
-                    {project.status}
-                </p>
+            </div>
 
-                {/* Progress Bar */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        <span>Progress</span>
-                        <span>{project.progress}%</span>
-                    </div>
-                    <div style={{
-                        height: '6px',
-                        width: '100%',
-                        backgroundColor: 'var(--bg-app)',
-                        borderRadius: '3px',
-                        overflow: 'hidden'
+            {/* Footer */}
+            <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <span style={{
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: s.color,
+                        background: s.bg,
+                        padding: '4px 10px',
+                        borderRadius: 'var(--radius-full)'
                     }}>
-                        <div style={{
-                            height: '100%',
-                            width: `${project.progress}%`,
-                            backgroundColor: 'var(--primary-500)',
-                            borderRadius: '3px',
-                            transition: 'width 0.3s ease'
-                        }} />
+                        {project.status}
+                    </span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'var(--gray-400)' }}>
+                        <Calendar size={14} />
+                        <span style={{ fontSize: '0.8125rem' }}>{project.due_date ? new Date(project.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No Due Date'}</span>
                     </div>
+                </div>
+
+                {/* Progress Bar Anchor */}
+                <div style={{ width: '100%', height: '4px', background: 'var(--gray-100)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{
+                        width: `${progress}%`,
+                        height: '100%',
+                        background: project.status === 'Completed' ? 'var(--success)' : 'var(--primary-600)',
+                        borderRadius: '2px'
+                    }} />
                 </div>
             </div>
-
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: '1rem',
-                borderTop: '1px solid var(--border-light)',
-                fontSize: '0.875rem',
-                color: 'var(--text-secondary)'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Calendar size={16} />
-                    <span>{project.dueDate}</span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-muted)' }}>
-                        <span title="Expected Duration">Exp: {project.expectedDuration}d</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 500, color: 'var(--primary-600)' }}>
-                        <span title="Actual Duration">Act: {project.actualDuration}d</span>
-                    </div>
-                </div>
-            </div>
-
         </div>
     );
 };

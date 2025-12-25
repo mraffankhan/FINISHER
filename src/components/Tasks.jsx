@@ -3,12 +3,17 @@ import { Plus } from 'lucide-react';
 import FilterBar from './Tasks/FilterBar';
 import TaskBoard from './Tasks/TaskBoard';
 import CreateTaskModal from './Tasks/CreateTaskModal';
+import CompletionModal from './Tasks/CompletionModal';
 import { supabase } from '../supabaseClient';
 
 const Tasks = ({ isOwner }) => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Completion Logic State
+    const [completionModalOpen, setCompletionModalOpen] = useState(false);
+    const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState(null);
 
     const fetchTasks = async () => {
         setLoading(true);
@@ -31,6 +36,34 @@ const Tasks = ({ isOwner }) => {
 
     const handleTaskCreated = () => {
         fetchTasks();
+    };
+
+    const handleCompleteRequest = (task) => {
+        setSelectedTaskForCompletion(task);
+        setCompletionModalOpen(true);
+    };
+
+    const handleConfirmCompletion = async (type) => {
+        if (!selectedTaskForCompletion) return;
+
+        // Optimistic Update (Optional) or just wait for DB
+        const { error } = await supabase
+            .from('tasks')
+            .update({
+                status: 'Completed',
+                completion_type: type
+            })
+            .eq('id', selectedTaskForCompletion.id);
+
+        if (error) {
+            console.error('Error updating task:', error);
+            alert('Failed to update task.');
+        } else {
+            fetchTasks(); // Refresh board
+        }
+
+        setCompletionModalOpen(false);
+        setSelectedTaskForCompletion(null);
     };
 
     return (
@@ -74,13 +107,23 @@ const Tasks = ({ isOwner }) => {
             {loading ? (
                 <div style={{ color: 'var(--text-secondary)' }}>Loading tasks...</div>
             ) : (
-                <TaskBoard tasks={tasks} />
+                <TaskBoard
+                    tasks={tasks}
+                    isOwner={isOwner}
+                    onComplete={handleCompleteRequest}
+                />
             )}
 
             <CreateTaskModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onTaskCreated={handleTaskCreated}
+            />
+
+            <CompletionModal
+                isOpen={completionModalOpen}
+                onClose={() => setCompletionModalOpen(false)}
+                onConfirm={handleConfirmCompletion}
             />
         </div>
     );
