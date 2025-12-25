@@ -69,6 +69,27 @@ body {
   line-height: 1.5;
   overscroll-behavior-y: none;
   /* iOS bounce fix */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  /* Disable text selection for app-like feel */
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  /* Faster tap response */
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  /* Prevents body scroll, we scroll internal containers */
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  /* Main scrolling area */
+  -webkit-overflow-scrolling: touch;
+  /* Momentum scroll */
 }
 
 h1,
@@ -227,12 +248,18 @@ button:active {
   .main-content {
     margin-left: 0;
     width: 100%;
+    /* Use safe area for padding */
     padding: 1rem;
-    /* Compact padding */
-    padding-top: calc(var(--header-height) + 1rem);
-    /* Space for header */
-    padding-bottom: calc(var(--bottom-nav-height) + 2rem);
-    /* Space for nav */
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+
+    /* Content spacer for fixed headers/footers */
+    padding-top: calc(var(--header-height) + 1.5rem + env(safe-area-inset-top));
+    padding-bottom: calc(var(--bottom-nav-height) + 2rem + env(safe-area-inset-bottom));
+
+    min-height: 100%;
+    /* Ensure coverage */
+    overflow-x: hidden;
   }
 
   /* 2. Top App Header */
@@ -244,11 +271,18 @@ button:active {
     top: 0;
     left: 0;
     right: 0;
-    height: var(--header-height);
+    left: 0;
+    right: 0;
+    /* height set dynamically via padding */
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     z-index: 100;
-    padding: 0 1rem;
+    padding: 0 max(1rem, env(safe-area-inset-left));
+    /* Safe area horizontal */
+    padding-top: env(safe-area-inset-top);
+    /* Notch support */
+    height: calc(var(--header-height) + env(safe-area-inset-top));
+    /* Expand for notch */
     border-bottom: 1px solid var(--border-light);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   }

@@ -23,28 +23,20 @@ const ProjectCard = ({ project, isOwner, onEdit, onDelete }) => {
         : (project.status === 'Completed' ? 100 : (project.status === 'Not Started' ? 0 : 50));
 
     return (
-        <div style={{
-            background: 'white',
-            borderRadius: '24px', // Softer, bigger radius
-            border: '1px solid var(--border-light)',
-            padding: '2rem', // Spacious
-            position: 'relative',
-            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '280px', // Taller for strategic presence
-            boxShadow: 'var(--shadow-sm)'
-        }}
-            onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                setShowMenu(false);
+        <div
+            className="project-card"
+            style={{
+                background: 'white',
+                borderRadius: '24px', // Softer, bigger radius
+                border: '1px solid var(--border-light)',
+                padding: '2rem', // Spacious
+                position: 'relative',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '280px', // Taller for strategic presence
+                boxShadow: 'var(--shadow-sm)'
             }}
             onClick={() => isOwner ? onEdit(project) : null} // Clicking card acts as edit/view
         >
