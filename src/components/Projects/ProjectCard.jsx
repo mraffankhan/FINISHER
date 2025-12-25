@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, ArrowUpRight } from 'lucide-react';
+import { Calendar, ArrowUpRight, Pencil, Trash2 } from 'lucide-react';
 
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, isOwner, onEdit, onDelete }) => {
     // Map status/difficulty to aesthetic styles
     const getStatusStyle = (status) => {
         switch (status) {
@@ -36,29 +36,62 @@ const ProjectCard = ({ project }) => {
             onMouseEnter={e => {
                 e.currentTarget.style.boxShadow = 'var(--shadow-md)';
                 e.currentTarget.style.borderColor = 'var(--gray-300)';
-                const icon = e.currentTarget.querySelector('.arrow-icon');
-                if (icon) icon.style.opacity = 1;
+                const actions = e.currentTarget.querySelector('.project-actions');
+                if (actions && isOwner) actions.style.opacity = 1;
             }}
             onMouseLeave={e => {
                 e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                 e.currentTarget.style.borderColor = 'var(--border-light)';
-                const icon = e.currentTarget.querySelector('.arrow-icon');
-                if (icon) icon.style.opacity = 0;
+                const actions = e.currentTarget.querySelector('.project-actions');
+                if (actions) actions.style.opacity = 0;
             }}
         >
-            {/* Hover Icon */}
-            <ArrowUpRight
-                className="arrow-icon"
-                size={20}
-                style={{
-                    position: 'absolute',
-                    top: '1.5rem',
-                    right: '1.5rem',
-                    color: 'var(--gray-400)',
-                    opacity: 0,
-                    transition: 'opacity 0.2s'
-                }}
-            />
+            {/* Owner Actions (Absolute Top Right) */}
+            {isOwner && (
+                <div
+                    className="project-actions"
+                    style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        display: 'flex',
+                        gap: '0.5rem',
+                        opacity: 0,
+                        transition: 'opacity 0.2s',
+                        zIndex: 10
+                    }}
+                >
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(project); }}
+                        style={{
+                            padding: '6px',
+                            background: 'white',
+                            border: '1px solid var(--border-strong)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            color: 'var(--text-secondary)'
+                        }}
+                        title="Edit Project"
+                    >
+                        <Pencil size={16} />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(project); }}
+                        style={{
+                            padding: '6px',
+                            background: 'white',
+                            border: '1px solid var(--border-strong)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            color: 'var(--danger)'
+                        }}
+                        title="Delete Project"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )}
+
 
             <div>
                 {/* Header (Category & Difficulty) */}

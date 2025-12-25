@@ -1,76 +1,114 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 import StatsCard from '../StatsCard';
-import { Layers, CheckCheck, TrendingUp, AlertTriangle, Clock, Calendar, Hash } from 'lucide-react';
+import { Layers, CheckCheck, TrendingUp, AlertTriangle, Clock, Calendar, Hash, Target } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 
 const Analytics = ({ isOwner }) => {
-    // ... (State logic same as before, preserving data handling) ...
     const [metrics, setMetrics] = useState({
-        started: 0, completed: 0, completionRate: 0, dropRate: 0,
-        avgBuildTime: 0, longestRunning: 0, avgTimePerTask: 0
+        started: 0, completed: 0, completionRate: 0,
+        avgBuildTime: 0, longestRunning: 0,
+        avgTaskTime: 0, totalHoursLogged: 0, estAccuracy: 1 // 1 = 100% accurate
     });
+    const [monthlyHoursData, setMonthlyHoursData] = useState([]);
     const [completionTimeData, setCompletionTimeData] = useState([]);
-    const [projectsTrendData, setProjectsTrendData] = useState([]);
     const [taskDifficultyData, setTaskDifficultyData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
-            // ... (Logic preserved for brevity, re-implementing exact fetching)
-            // For this output, I am focusing on the JSX Structure redesign.
-            // Assumption: Data structure remains identical.
             setLoading(true);
             const { data: projects } = await supabase.from('projects').select('*');
             const { data: tasks } = await supabase.from('tasks').select('*');
 
             if (projects && tasks) {
+                // --- PROJECTS METRICS ---
                 const started = projects.length;
                 const completed = projects.filter(p => p.status === 'Completed').length;
-                const dropped = projects.filter(p => p.status === 'Dropped').length;
                 const completionRate = started > 0 ? Math.round((completed / started) * 100) : 0;
-                const dropRate = started > 0 ? Math.round((dropped / started) * 100) : 0;
 
                 const completedProjects = projects.filter(p => p.status === 'Completed' && p.actual_days);
                 const avgBuildTime = completedProjects.length > 0
                     ? Math.round(completedProjects.reduce((acc, curr) => acc + curr.actual_days, 0) / completedProjects.length)
                     : 0;
 
-                // Diff Logic
+                // --- TASKS METRICS ---
+                const completedTasks = tasks.filter(t => t.status === 'Completed');
+
+                // Avg Time Per Task
+                const tasksWithActuals = completedTasks.filter(t => t.actual_hours);
+                const totalHoursLogged = tasksWithActuals.reduce((sum, t) => sum + Number(t.actual_hours), 0);
+                const avgTaskTime = tasksWithActuals.length > 0
+                    ? (totalHoursLogged / tasksWithActuals.length).toFixed(1)
+                    : 0;
+
+                // Estimation Accuracy (Actual / Est)
+                // Ideal is 1.0. > 1.0 means under-estimated. < 1.0 means over-estimated.
+                const tasksWithBoth = completedTasks.filter(t => t.actual_hours && t.estimated_hours);
+                let totalActual = 0;
+                let totalEst = 0;
+                tasksWithBoth.forEach(t => {
+                    totalActual += Number(t.actual_hours);
+                    totalEst += Number(t.estimated_hours);
+                });
+                const estAccuracy = totalEst > 0 ? ((totalActual / totalEst) * 100).toFixed(0) : 100; // Percentage of estimate
+
+                setMetrics({
+                    started, completed, completionRate, avgBuildTime,
+                    avgTaskTime, totalHoursLogged, estAccuracy
+                });
+
+                // --- CHARTS ---
+
+                // 1. Difficulty Efficiency (Existing)
                 const diffs = ['Easy', 'Medium', 'Hard'];
                 const timeByDiff = diffs.map(d => {
                     const projs = projects.filter(p => p.difficulty === d && p.status === 'Completed' && p.actual_days);
                     const avg = projs.length > 0 ? Math.round(projs.reduce((a, c) => a + c.actual_days, 0) / projs.length) : 0;
                     return { name: d, days: avg };
                 });
+                setCompletionTimeData(timeByDiff);
 
-                // Trend Logic
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                const trendBuckets = months.map(m => ({ name: m, count: 0 }));
-                projects.filter(p => p.status === 'Completed' && p.due_date).forEach(p => {
-                    const month = new Date(p.due_date).getMonth();
-                    if (trendBuckets[month]) trendBuckets[month].count++;
-                });
-
-                const longest = projects.reduce((max, p) => (p.actual_days > max ? p.actual_days : max), 0);
-
-                // Task Logic
+                // 2. Task Load (Existing)
                 const taskEasy = tasks.filter(t => t.difficulty === 'Easy').length;
                 const taskMed = tasks.filter(t => t.difficulty === 'Medium').length;
                 const taskHard = tasks.filter(t => t.difficulty === 'Hard').length;
-                const taskDiffs = [
+                setTaskDifficultyData([
                     { name: 'Low', value: taskEasy, color: '#10b981' },
                     { name: 'Med', value: taskMed, color: '#006989' },
                     { name: 'High', value: taskHard, color: '#ef4444' }
-                ];
+                ]);
 
-                const completedTasks = tasks.filter(t => t.status === 'Completed' && t.actual_hours);
-                const avgTaskTime = completedTasks.length > 0 ? (completedTasks.reduce((a, c) => a + c.actual_hours, 0) / completedTasks.length).toFixed(1) : 0;
+                // 3. Monthly Hours (NEW)
+                // Bucket tasks by Month of Completion (completed_at)
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const hoursMap = {}; // "Jan": 24, "Feb": 40...
 
-                setMetrics({ started, completed, completionRate, dropRate, avgBuildTime, longestRunning: longest, avgTimePerTask: avgTaskTime });
-                setCompletionTimeData(timeByDiff);
-                setProjectsTrendData(trendBuckets.slice(0, 6)); // First 6 months for visual cleanliness
-                setTaskDifficultyData(taskDiffs);
+                // Initialize last 6 months
+                const today = new Date();
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                    const label = monthNames[d.getMonth()];
+                    hoursMap[label] = 0;
+                }
+
+                // Fill buckets
+                tasksWithActuals.forEach(t => {
+                    // Use completed_at if available, else updated_at, else due_date. 
+                    // Best effort for Manual time.
+                    const dateStr = t.completed_at || t.updated_at || t.due_date;
+                    if (dateStr) {
+                        const date = new Date(dateStr);
+                        const label = monthNames[date.getMonth()];
+                        // Only add if it's in our window (simple check key existence)
+                        if (hoursMap[label] !== undefined) {
+                            hoursMap[label] += Number(t.actual_hours);
+                        }
+                    }
+                });
+
+                const hoursChartData = Object.keys(hoursMap).map(m => ({ name: m, hours: hoursMap[m] }));
+                setMonthlyHoursData(hoursChartData);
             }
             setLoading(false);
         };
@@ -82,7 +120,7 @@ const Analytics = ({ isOwner }) => {
             return (
                 <div style={{ background: 'white', padding: '0.75rem 1rem', border: '1px solid var(--border-light)', borderRadius: '8px', boxShadow: 'var(--shadow-md)' }}>
                     <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 0 }}>{label || payload[0].name}</p>
-                    <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.875rem' }}>{payload[0].value}</p>
+                    <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.875rem' }}>{payload[0].value} {payload[0].name === 'hours' ? 'hrs' : ''}</p>
                 </div>
             );
         }
@@ -108,31 +146,36 @@ const Analytics = ({ isOwner }) => {
                 <section>
                     <h3 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Velocity</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
-                        <StatsCard title="Started" value={metrics.started} icon={Layers} />
-                        <StatsCard title="Shipped" value={metrics.completed} icon={CheckCheck} />
-                        <StatsCard title="Success Rate" value={`${metrics.completionRate}%`} icon={TrendingUp} />
-                        <StatsCard title="Avg Build Time" value={`${metrics.avgBuildTime}d`} icon={Clock} />
+                        <StatsCard title="Completed Projects" value={metrics.completed} icon={CheckCheck} />
+                        <StatsCard title="Avg Task Time" value={`${metrics.avgTaskTime}h`} icon={Clock} subtext="Actual hours" />
+                        <StatsCard title="Total Hours" value={metrics.totalHoursLogged} icon={Layers} subtext="Lifetime logged" />
+                        <StatsCard title="Est. Accuracy" value={`${metrics.estAccuracy}%`} icon={Target} subtext="Actual vs Est" />
                     </div>
                 </section>
 
-                {/* 2. Deep Dive Row */}
+                {/* 2. Monthly Execution & Task Load */}
                 <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+
+                    {/* Monthly Hours Chart (Line) */}
                     <div className="card">
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Efficiency by Difficulty</h3>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Days to complete projects</p>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Execution Volume</h3>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Total hours logged per month</p>
                         </div>
                         <div style={{ width: '100%', height: 250 }}>
                             <ResponsiveContainer>
-                                <BarChart data={completionTimeData}>
+                                <LineChart data={monthlyHoursData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-light)" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
-                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--gray-50)', radius: 4 }} />
-                                    <Bar dataKey="days" fill="var(--primary-600)" radius={[4, 4, 4, 4]} barSize={50} />
-                                </BarChart>
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Line type="monotone" dataKey="hours" stroke="var(--primary-600)" strokeWidth={3} dot={{ r: 4, fill: 'var(--primary-600)' }} activeDot={{ r: 6 }} />
+                                </LineChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
+                    {/* Task Difficulty */}
                     <div className="card">
                         <div style={{ marginBottom: '1.5rem' }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Task Load</h3>
@@ -156,6 +199,23 @@ const Analytics = ({ isOwner }) => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </section>
+
+                {/* 3. Project Efficiency (Bar) */}
+                <section className="card">
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Project Efficiency</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Avg days to ship by difficulty</p>
+                    </div>
+                    <div style={{ width: '100%', height: 250 }}>
+                        <ResponsiveContainer>
+                            <BarChart data={completionTimeData}>
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} dy={10} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--gray-50)', radius: 4 }} />
+                                <Bar dataKey="days" fill="var(--primary-600)" radius={[4, 4, 4, 4]} barSize={50} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </section>
 

@@ -1,32 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
-import FilterBar from './Tasks/FilterBar';
 import TaskBoard from './Tasks/TaskBoard';
-import CreateTaskModal from './Tasks/CreateTaskModal';
+import CreateTaskModal from './Tasks/CreateTaskModal'; // Universal Task Modal
 import CompletionModal from './Tasks/CompletionModal';
 import { supabase } from '../supabaseClient';
+import FilterBar from './Tasks/FilterBar';
 
 const Tasks = ({ isOwner }) => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Completion Logic State
+    // Create/Edit Modal State
+    const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState(null);
+
+    // Completion Modal State
     const [completionModalOpen, setCompletionModalOpen] = useState(false);
     const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState(null);
 
     const fetchTasks = async () => {
         setLoading(true);
-        // Public Read: Fetch all tasks
+        // Supabase join syntax: select(*, projects(name)) to get project name
         const { data, error } = await supabase
             .from('tasks')
-            .select('*, projects(name)');
+            .select('*, projects(name)')
+            .order('created_at', { ascending: false });
 
         if (error) console.error('Error fetching tasks:', error);
 
-        if (data) {
-            setTasks(data);
-        }
+        if (data) setTasks(data);
         setLoading(false);
     };
 
@@ -34,10 +36,44 @@ const Tasks = ({ isOwner }) => {
         fetchTasks();
     }, []);
 
-    const handleTaskCreated = () => {
+    const handleTaskSaved = () => {
         fetchTasks();
+        setCreateModalOpen(false);
+        setTaskToEdit(null);
     };
 
+    // --- ACTIONS ---
+
+    // 1. Create
+    const handleCreateClick = () => {
+        setTaskToEdit(null);
+        setCreateModalOpen(true);
+    };
+
+    // 2. Edit
+    const handleEditClick = (task) => {
+        setTaskToEdit(task);
+        setCreateModalOpen(true);
+    };
+
+    // 3. Delete
+    const handleDeleteClick = async (task) => {
+        if (window.confirm(`Are you sure you want to delete "${task.title}"?`)) {
+            const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('id', task.id);
+
+            if (error) {
+                console.error('Error deleting task:', error);
+                alert('Failed to delete task.');
+            } else {
+                fetchTasks(); // Refresh
+            }
+        }
+    };
+
+    // 4. Completion (Shortcut Logic)
     const handleCompleteRequest = (task) => {
         setSelectedTaskForCompletion(task);
         setCompletionModalOpen(true);
@@ -46,25 +82,30 @@ const Tasks = ({ isOwner }) => {
     const handleConfirmCompletion = async (type) => {
         if (!selectedTaskForCompletion) return;
 
-        // Optimistic Update (Optional) or just wait for DB
         const { error } = await supabase
             .from('tasks')
             .update({
                 status: 'Completed',
-                completion_type: type
+                completion_type: type, // 'full' or 'partial'
+                completed_at: new Date().toISOString()
             })
             .eq('id', selectedTaskForCompletion.id);
 
         if (error) {
-            console.error('Error updating task:', error);
-            alert('Failed to update task.');
+            console.error('Error completing task:', error);
         } else {
-            fetchTasks(); // Refresh board
+            fetchTasks();
         }
-
         setCompletionModalOpen(false);
         setSelectedTaskForCompletion(null);
     };
+
+    // Modal Close Handler
+    const handleCloseCreateModal = () => {
+        setCreateModalOpen(false);
+        setTaskToEdit(null);
+    };
+
 
     return (
         <div>
@@ -78,13 +119,13 @@ const Tasks = ({ isOwner }) => {
             }}>
                 <div>
                     <h1 style={{ fontSize: '1.875rem', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}>Tasks</h1>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Manage your execution pipeline.</p>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Execute your plan.</p>
                 </div>
                 {isOwner && (
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={handleCreateClick}
                         style={{
-                            backgroundColor: 'var(--primary-500)',
+                            backgroundColor: 'var(--primary-600)',
                             color: 'white',
                             padding: '0.75rem 1.5rem',
                             borderRadius: 'var(--radius-md)',
@@ -94,7 +135,8 @@ const Tasks = ({ isOwner }) => {
                             alignItems: 'center',
                             gap: '0.5rem',
                             boxShadow: 'var(--shadow-glow)',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            border: 'none'
                         }}>
                         <Plus size={20} />
                         Create Task
@@ -102,8 +144,9 @@ const Tasks = ({ isOwner }) => {
                 )}
             </header>
 
-            <FilterBar />
+            {/* <TaskFilters />  -- Placeholder if you have it */}
 
+            {/* Board */}
             {loading ? (
                 <div style={{ color: 'var(--text-secondary)' }}>Loading tasks...</div>
             ) : (
@@ -111,13 +154,17 @@ const Tasks = ({ isOwner }) => {
                     tasks={tasks}
                     isOwner={isOwner}
                     onComplete={handleCompleteRequest}
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
                 />
             )}
 
+            {/* Modals */}
             <CreateTaskModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onTaskCreated={handleTaskCreated}
+                isOpen={isCreateModalOpen}
+                onClose={handleCloseCreateModal}
+                onTaskSaved={handleTaskSaved}
+                taskToEdit={taskToEdit}
             />
 
             <CompletionModal

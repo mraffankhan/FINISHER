@@ -44,7 +44,7 @@ const Charts = ({ activityData, difficultyData }) => {
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--gray-50)', radius: 4 }} />
                             <Bar
                                 dataKey="projects"
-                                fill="var(--primary-600)"
+                                fill="#006989"
                                 radius={[4, 4, 4, 4]}
                                 barSize={40}
                             />

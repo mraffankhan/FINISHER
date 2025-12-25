@@ -8,7 +8,7 @@ const columns = [
     { id: 'Completed', title: 'Done', color: 'var(--success)' },
 ];
 
-const TaskBoard = ({ tasks = [], isOwner, onComplete }) => {
+const TaskBoard = ({ tasks = [], isOwner, onComplete, onEdit, onDelete }) => {
     return (
         <div style={{
             display: 'grid',
@@ -28,7 +28,7 @@ const TaskBoard = ({ tasks = [], isOwner, onComplete }) => {
                             justifyContent: 'space-between',
                             marginBottom: '1.25rem',
                             paddingBottom: '0.5rem',
-                            borderBottom: `2px solid ${col.id === 'Not Started' ? 'transparent' : 'var(--gray-100)'}` // Only show line if needed, or keeping it clean
+                            borderBottom: `2px solid ${col.id === 'Not Started' ? 'transparent' : 'var(--gray-100)'}`
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: col.color }} />
@@ -70,6 +70,8 @@ const TaskBoard = ({ tasks = [], isOwner, onComplete }) => {
                                     task={task}
                                     isOwner={isOwner}
                                     onComplete={onComplete}
+                                    onEdit={onEdit}
+                                    onDelete={onDelete}
                                 />
                             ))}
                         </div>
