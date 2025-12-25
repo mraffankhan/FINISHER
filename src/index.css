@@ -1,0 +1,93 @@
+:root {
+  /* Teal Theme Palette */
+  --bg-app: #EAEBED;
+  /* User requested Light Grey */
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  /* Deep Teal Accent */
+  --primary-50: #e0f2f6;
+  /* Very light teal tint */
+  --primary-100: #bce3eb;
+  /* Light teal tint */
+  --primary-500: #006989;
+  /* Deep Teal Brand Color */
+  --primary-600: #005670;
+  /* Darker shade for interactions */
+
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-light: #f3f4f6;
+
+  /* Status Colors (Adjusted slightly to harmonize) */
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --neutral-soft: #f3f4f6;
+
+  /* Spacing & Radius */
+  --radius-md: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Modern "Floating" Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 24px -2px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 8px 30px -4px rgba(0, 105, 137, 0.15);
+  /* Teal glow */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.6;
+  /* Looser body text */
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Utilities */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  padding: 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+  border-color: var(--primary-100);
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.03em;
+  /* Tight tracking for premium feel */
+}
